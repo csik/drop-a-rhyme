@@ -13,7 +13,7 @@ import plivo
 import plivohelper
 from xml.dom import minidom
 
-from models import Call, Caller
+from models import Call
 
 app = Flask(__name__)
 
@@ -48,7 +48,7 @@ def answer():
             auth_token = 'MDhhYzRlMGViYjgwMDExYTY0Y2NmYjlhMWIwZDIw' # Our secret keys, please don't put up on github!
             p = plivo.RestAPI(auth_id, auth_token)                  # Create a Plivo API object, used when you want to write to their service
             params = {  'call_uuid':call_uuid,
-                        'urls':song_urls[3],
+                        'urls':song_urls[4],
                         'length':60,
                      }    
             p.play(params)                                  # A method in the object for sending sms
