@@ -13,6 +13,7 @@ import plivo
 import plivohelper
 from xml.dom import minidom
 
+from flaskext.mongoalchemy import MongoAlchemy
 from models import Call
 
 
@@ -42,15 +43,16 @@ def answer():
             c= Call(    timeAnswered = datetime.datetime.now(),
                         direction = request.form['Direction'],
                         callFrom = request.form['From'],
-                        billRate = request.form['BillRate'],
+                        billRate = float(request.form['BillRate']),
                         cn = request.form['CallerName'],
                         callTo = request.form['To'],
                         callUUID = request.form['CallUUID'], 
                         callStatus = request.form['CallStatus'],
-                        callState = 'ringing', 
-                        recordingURL = '') #make a new sCall object
-            c.save()
+                        callState = 'ringing',
+                        recordingURL = '' ) #make a new sCall object
                         
+            c.save()
+            
             call_uuid = request.form['CallUUID']
             
             s = "call uuid = "+ str(call_uuid)
@@ -64,7 +66,7 @@ def answer():
             auth_token = 'MDhhYzRlMGViYjgwMDExYTY0Y2NmYjlhMWIwZDIw' # Our secret keys, please don't put up on github!
             p = plivo.RestAPI(auth_id, auth_token)                  # Create a Plivo API object, used when you want to write to their service
             params = {  'call_uuid':call_uuid,
-                        'urls':song_urls[3],
+                        'urls':song_urls[4],
                         'length':60,
                      }    
             p.play(params)                                  # A method in the object for sending sms
@@ -107,6 +109,10 @@ def get_recording():
             print >> sys.stderr, "Received GET request to /answer."
         return "Received request to /answer."
 
+@app.route('/calls/')
+def list_calls():
+    all_calls = Call.query.all()
+    return render_template('list_calls.html', all_calls = all_calls)
     
 #@app.route("/plivo/voice/digit_print/", methods=['GET', 'POST'])
 #def answer():
