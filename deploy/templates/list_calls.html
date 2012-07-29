@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>list_calls</title>
+
+<html lang="en">
+<head>
+
+</head>
+<body>
+	<table border = 1>
+	<tr><td>UUID</td><td>From</td><td>To</td><td>Recording</td><td>Time</td></tr>
+
+	{% for call in all_calls %}
+	<tr><td> {{call.callUUID}}</td><td> {{call.callFrom}} </td><td> {{call.callTo}} </td><td><a href="{{call.recordingURL}}">play</td><td> {{call.timeAnswered}} </td></tr>
+	{% endfor %}
+
+	</table>
+</body>
+</html>
