@@ -13,9 +13,14 @@ import plivo
 import plivohelper
 from xml.dom import minidom
 
+from flaskext.mongoalchemy import MongoAlchemy
 from models import Call
 
+
 app = Flask(__name__)
+app.config['MONGOALCHEMY_DATABASE'] = 'calli'
+db = MongoAlchemy(app)
+
 
 BASEURL='http://50.116.10.109'
 
@@ -39,13 +44,16 @@ def answer():
             c= Call(    timeAnswered = datetime.datetime.now(),
                         direction = request.form['Direction'],
                         callFrom = request.form['From'],
-                        billRate = request.form['BillRate'],
+                        billRate = float(request.form['BillRate']),
                         cn = request.form['CallerName'],
                         callTo = request.form['To'],
                         callUUID = request.form['CallUUID'], 
                         callStatus = request.form['CallStatus'],
-                        callState = request.form['ringing'] ) #make a new sCall object
+                        callState = 'ringing',
+                        recordingURL = '' ) #make a new sCall object
                         
+            c.save()
+            
             call_uuid = request.form['CallUUID']
             
             s = "call uuid = "+ str(call_uuid)
