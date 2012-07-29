@@ -13,6 +13,8 @@ import plivo
 import plivohelper
 from xml.dom import minidom
 
+from models import Call, Caller
+
 app = Flask(__name__)
 
 BASEURL='http://50.116.10.109'
@@ -34,6 +36,7 @@ def answer():
         try:
             print >> sys.stderr, "Received POST request to /answer/."
             call_uuid = request.form['CallUUID']
+            
             s = "call uuid = "+ str(call_uuid)
             print >> sys.stderr, s
             
