@@ -15,7 +15,10 @@ from xml.dom import minidom
 
 from models import Call
 
+
 app = Flask(__name__)
+app.config['MONGOALCHEMY_DATABASE'] = 'calli'
+db = MongoAlchemy(app)
 
 BASEURL='http://50.116.10.109'
 
@@ -35,7 +38,7 @@ def answer():
     if request.method == 'POST':
         try:
             print >> sys.stderr, "Received POST request to /answer/."
-
+            
             c= Call(    timeAnswered = datetime.datetime.now(),
                         direction = request.form['Direction'],
                         callFrom = request.form['From'],
@@ -44,7 +47,9 @@ def answer():
                         callTo = request.form['To'],
                         callUUID = request.form['CallUUID'], 
                         callStatus = request.form['CallStatus'],
-                        callState = request.form['ringing'] ) #make a new sCall object
+                        callState = 'ringing', 
+                        recordingURL = '') #make a new sCall object
+            c.save()
                         
             call_uuid = request.form['CallUUID']
             
