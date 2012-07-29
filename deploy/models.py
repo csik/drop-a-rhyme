@@ -34,52 +34,53 @@ class Call(db.Document):
     callUUID = db.StringField() #unique id assigned by Plivo (we aren't checking this!)
     callStatus = db.StringField() #the plivo status
     callState = db.StringField() #our state machine state
+    recordingURL = db.StringField() #our state machine state
         
 
 
 
-c= Call(    timeAnswered = datetime.datetime.now(),
-            direction='left', 
-            callFrom = 'me', 
-            billRate = 3.333, 
-            cn = 'theFonz',
-            callTo = 'you', 
-            callUUID = 'opiasdflkjsafhskjfh', 
-            callStatus = 'ringing',
-            callState = "ringing" ) #make a new sCall object
-            
-d= Call(    timeAnswered = datetime.datetime.now(),
-            direction='right', 
-            callFrom = 'yo mama', 
-            billRate = 3.333, 
-            cn = 'yo mama number',
-            callTo = 'me', 
-            callUUID = 'xxxxxxxxxxxxxxxxxxx', 
-            callStatus = 'ringing',
-            callState = "ringing" ) #make a new sCall object
-            
-e = Call(   timeAnswered = datetime.datetime.now(),
-            direction='center', 
-            callFrom = 'the fonz', 
-            billRate = 400.23, 
-            cn = 'theFonz',
-            callTo = 'you', 
-            callUUID = 'yyy23487298347298743', 
-            callStatus = 'hungup',
-            callState = "hanging up" ) #make a new sCall object
+#c= Call(    timeAnswered = datetime.datetime.now(),
+#            direction='left', 
+#            callFrom = 'me', 
+#            billRate = 3.333, 
+#            cn = 'theFonz',
+#            callTo = 'you', 
+#            callUUID = 'opiasdflkjsafhskjfh', 
+#            callStatus = 'ringing',
+#            callState = "ringing" ) #make a new sCall object
+#            
+#d= Call(    timeAnswered = datetime.datetime.now(),
+#            direction='right', 
+#            callFrom = 'yo mama', 
+#            billRate = 3.333, 
+#            cn = 'yo mama number',
+#            callTo = 'me', 
+#            callUUID = 'xxxxxxxxxxxxxxxxxxx', 
+#            callStatus = 'ringing',
+#            callState = "ringing" ) #make a new sCall object
+#            
+#e = Call(   timeAnswered = datetime.datetime.now(),
+#            direction='center', 
+#            callFrom = 'the fonz', 
+#            billRate = 400.23, 
+#            cn = 'theFonz',
+#            callTo = 'you', 
+#            callUUID = 'yyy23487298347298743', 
+#            callStatus = 'hungup',
+#            callState = "hanging up" ) #make a new sCall object
     
-c.save()
-thiscall = Call.query.filter(Call.callUUID == 'opiasdflkjsafhskjfh').first()
-print thiscall.callUUID
+#c.save()
+#thiscall = Call.query.filter(Call.callUUID == 'opiasdflkjsafhskjfh').first()
+#print thiscall.callUUID
 
-fonz = Call.query.filter(Call.cn == 'theFonz')
-print str(fonz.all())
-d.save()
-e.save()
-print str(fonz.all())
+#fonz = Call.query.filter(Call.cn == 'theFonz')
+#print str(fonz.all())
+#d.save()
+#e.save()
+#print str(fonz.all())
 
-for i in fonz.all():
-    print i.timeAnswered
+#for i in fonz.all():
+#    print i.timeAnswered
 
         
 

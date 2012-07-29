@@ -35,6 +35,17 @@ def answer():
     if request.method == 'POST':
         try:
             print >> sys.stderr, "Received POST request to /answer/."
+
+            c= Call(    timeAnswered = datetime.datetime.now(),
+                        direction = request.form['Direction'],
+                        callFrom = request.form['From'],
+                        billRate = request.form['BillRate'],
+                        cn = request.form['CallerName'],
+                        callTo = request.form['To'],
+                        callUUID = request.form['CallUUID'], 
+                        callStatus = request.form['CallStatus'],
+                        callState = request.form['ringing'] ) #make a new sCall object
+                        
             call_uuid = request.form['CallUUID']
             
             s = "call uuid = "+ str(call_uuid)
@@ -79,8 +90,10 @@ def answer():
 def get_recording():
         if request.method == 'POST':
             try:
+                thiscall = Call.query.filter(Call.callUUID == request.form['CallUUID']).first() 
+                thiscall.recordingURL = request.form['RecordFile']
                 print >> sys.stderr, "Received POST request to /get_recording/."
-                s = "received url = " + str(request.form['RecordFile'])
+                s = "received url = " + thiscall.recordingURL
                 print >> sys.stderr, s
             except:
                  print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
