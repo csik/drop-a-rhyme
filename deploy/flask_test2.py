@@ -102,6 +102,7 @@ def get_recording():
                 print >> sys.stderr, "Received POST request to /get_recording/."
                 s = "received url = " + thiscall.recordingURL
                 print >> sys.stderr, s
+                thiscall.save()
             except:
                  print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
                  print >> sys.stderr, str(sys.exc_info()[1])
