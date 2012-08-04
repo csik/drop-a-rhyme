@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>list_sms</title>
+
+<html lang="en">
+<head>
+
+</head>
+<body>
+	<table border = 1>
+	<tr><td>UUID</td><td>From</td><td>To</td><td>Text</td><td>Time</td></tr>
+
+	{% for sms in all_sms %}
+	<tr><td> <a href="sms/{{sms.smsMessageUUID}}">{{sms.smsMessageUUID}}</a></td><td> {{sms.smsFrom}} </td><td> {{sms.smsTo}} </td><td>{{sms.smsText}}</td><td> {{sms.timeAnswered}} </td></tr>
+	{% endfor %}
+
+	</table>
+</body>
+</html>
