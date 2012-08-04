@@ -2,10 +2,10 @@ from fluidity import StateMachine, state, transition
 
 class SimpleMachine(StateMachine):
         def __init__(self, name):
-            super( SimpleMachine, self ).__init__()
+            StateMachine.__init__(self)
             self.name = name
         initial_state = 'created'
-        state('created')
+        state('created', enter = 'creation', exit = 'put_on_queue')
         state('waiting', enter = 'queued_now', exit = 'put_in_processing')
         state('processed', enter = 'processing', exit = 'now_processed')
         state('canceled', enter = 'canceling',)
@@ -15,7 +15,7 @@ class SimpleMachine(StateMachine):
         transition(from_=['waiting', 'created'], event='cancel', to='canceled')
         
         def creation(self):
-        	print "created " + self.name
+        	print "created " # can't use self attributes yet because haven't called super....
         def put_on_queue(self):
         	print "put on queue " + self.name
         def queued_now(self):

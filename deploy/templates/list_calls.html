@@ -8,10 +8,10 @@
 </head>
 <body>
 	<table border = 1>
-	<tr><td>UUID</td><td>From</td><td>To</td><td>Recording</td><td>Time</td></tr>
+	<tr><td>UUID</td><td>From</td><td>To</td><td>Recording</td><td>Time</td><td>Duration</td><td>Hangup Caust</td></tr>
 
 	{% for call in all_calls %}
-	<tr><td> {{call.callUUID}}</td><td> {{call.callFrom}} </td><td> {{call.callTo}} </td><td><a href="{{call.recordingURL}}">play</td><td> {{call.timeAnswered}} </td></tr>
+	<tr><td> <a href="calls/{{call.callUUID}}">{{call.callUUID}}</a></td><td> {{call.callFrom}} </td><td> {{call.callTo}} </td><td>{% if call.recordingURL %}<a href="{{call.recordingURL}}">play</a>{% endif %}</td><td> {{call.timeAnswered}} </td><td>{{call.callPlivoDuration}}</td><td>{{call.hangupCause}}</td></tr>
 	{% endfor %}
 
 	</table>

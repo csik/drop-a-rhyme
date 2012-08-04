@@ -21,6 +21,7 @@ db = MongoAlchemy(app)
 
 #{'Direction': 'inbound', 'From': '16176424223', 'CallerName': '+16176424223', 'BillRate': '0.00900', 'To': '12138141831', 'CallUUID': u'dc03af24-d46c-11e1-a698-efdbf167ae32', 'CallStatus': 'ringing'}
 
+import datetime
 
 #!!!!!!!!!!!!!!!!!!!
 #!!!!!!!!!!!!!!!!!!! 
@@ -29,14 +30,36 @@ class Call(db.Document):
     direction = db.StringField() #inbound, outbound
     callFrom = db.StringField() #from number
     cn = db.StringField() #from number
-    billRate = db.FloatField()
+    billRate = db.FloatField() 
     callTo = db.StringField() 
     callUUID = db.StringField() #unique id assigned by Plivo (we aren't checking this!)
-    callStatus = db.StringField() #the plivo status
+    callStatus = db.StringField(required=False) #the plivo status
     callState = db.StringField() #our state machine state
-    recordingURL = db.StringField() #our state machine state
-        
+    #everything above this mark should be part of the __init__()
+    #everything below can be updated later
+    timeEnded = db.DateTimeField(required=False) #allows for call length
+    recordingURL = db.StringField(required=False) #passed with successful record
+    hangupCause = db.StringField(required=False)
+    callNumberOfListens = db.IntField(required=False)
+    callLength = db.IntField(required=False) #seconds
+    callUpVotes = db.IntField(required=False)
+    callDownVotes = db.IntField(required=False)
+    callListens = db.IntField(required=False)
+    callListenLengths = db.ListField(db.IntField(),required=False)
+    callPlivoDuration = db.StringField(required=False)
 
+class SMS(db.Document):
+    timeAnswered = db.DateTimeField()
+    direction = db.StringField()
+    smsTo = db.StringField() 
+    smsType = db.StringField() 
+    smsMessageUUID = db.StringField()
+    smsFrom = db.StringField()
+    smsText = db.StringField()
+    
+class Trax(db.Document):
+    traxAdded = db.DateTimeField()
+    traxURL = db.StringField()
 
 
 #c= Call(    timeAnswered = datetime.datetime.now(),
