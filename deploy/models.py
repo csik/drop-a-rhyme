@@ -16,7 +16,8 @@ from flask import Flask
 from flaskext.mongoalchemy import MongoAlchemy
 
 app = Flask(__name__)
-app.config['MONGOALCHEMY_DATABASE'] = 'calli'
+app.config.from_object('config')
+app.config['MONGOALCHEMY_DATABASE'] = 'callz'
 db = MongoAlchemy(app)
 
 #{'Direction': 'inbound', 'From': '16176424223', 'CallerName': '+16176424223', 'BillRate': '0.00900', 'To': '12138141831', 'CallUUID': u'dc03af24-d46c-11e1-a698-efdbf167ae32', 'CallStatus': 'ringing'}
@@ -37,6 +38,7 @@ class Call(db.Document):
     callState = db.StringField() #our state machine state
     #everything above this mark should be part of the __init__()
     #everything below can be updated later
+    callDaddyPickle = db.StringField(required=False) #xml for processing
     timeEnded = db.DateTimeField(required=False) #allows for call length
     recordingURL = db.StringField(required=False) #passed with successful record
     hangupCause = db.StringField(required=False)
@@ -47,6 +49,8 @@ class Call(db.Document):
     callListens = db.IntField(required=False)
     callListenLengths = db.ListField(db.IntField(),required=False)
     callPlivoDuration = db.StringField(required=False)
+    
+    #i_timeAnswered = db.Document.Index().descending('timeAnswered')
 
 class SMS(db.Document):
     timeAnswered = db.DateTimeField()

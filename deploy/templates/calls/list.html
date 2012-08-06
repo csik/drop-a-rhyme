@@ -1,0 +1,18 @@
+{% extends "calls/base.html" %}
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <h1 id="">{{ title }}</h1>
+    
+    <table border = 1>
+	<tr><td>UUID</td><td>From</td><td>To</td><td>Recording</td><td>Time</td><td>Duration</td><td>Hangup Caust</td></tr>
+
+	{% for call in pagination.items %}
+	<tr><td> <a href="{{url_for("detail_calls", uuid=call.callUUID)}}">{{call.callUUID}}</a></td><td> {{call.callFrom}} </td><td> {{call.callTo}} </td><td>{% if call.recordingURL %}<a href="{{call.recordingURL}}">play</a>{% endif %}</td><td> {{call.timeAnswered}} </td><td>{{call.callPlivoDuration}}</td><td>{{call.hangupCause}}</td></tr>
+	{% endfor %}
+
+	</table>
+
+{% endblock %}

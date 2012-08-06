@@ -8,24 +8,24 @@ from flask import request, render_template, url_for
 
 import sys
 import datetime
-import shelve
+
 import plivo
 import plivohelper
 from xml.dom import minidom
 
+import pickle
+
 from flaskext.mongoalchemy import MongoAlchemy
+
 from models import Call, SMS, Trax
 from call import CallStateMachDaddy
 
+from functools import wraps
 
 app = Flask(__name__)
 app.config.from_object('config')
-app.config['MONGOALCHEMY_DATABASE'] = 'calli'
+app.config['MONGOALCHEMY_DATABASE'] = 'callz'
 db = MongoAlchemy(app)
-
-current_calls = {}
-
-BASEURL='http://50.116.10.109'
 
 song_urls=['http://50.116.10.109/~csik/plivo_sounds/old_skool.mp3',
           'http://50.116.10.109/~csik/plivo_sounds/reggae_1.mp3',
@@ -37,63 +37,80 @@ song_urls=['http://50.116.10.109/~csik/plivo_sounds/old_skool.mp3',
 def hello():
     return "A very serious Hello World."
     
+#wrapper to get call and daddy    
+def get_objects(function):
+    @wraps(function)
+    def get_objects_wrapper(*args,**kwargs):
+        try:
+            #c = Call.query.filter(Call.callUUID == uuid).first()
+            #daddy =  pickle.loads(c.callDaddyPickle)
+            #function(uuid, daddy = daddy, c = c)
+            print >> sys.stderr, 'args '+str(args)
+            print >> sys.stderr, 'kwargs '+str(kwargs)
+            uuid = str(kwargs['uuid'])
+            print >> sys.stderr, uuid
+            c = Call.query.filter(Call.callUUID == uuid).first()
+            print >> sys.stderr, 'got c'
+            kwargs['c'] = c
+            daddy =  pickle.loads(c.callDaddyPickle)
+            kwargs['daddy'] =  daddy
+            print >> sys.stderr, 'kwargs '+str(kwargs)
+            #return function(*args, **kwargs)
+            return function(uuid=uuid, c=c, daddy=daddy)
+        except:
+            print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
+            print >> sys.stderr, str(sys.exc_info()[1])
+    return get_objects_wrapper
+        
+
+@app.route('/dec_test/<uuid>')
+@get_objects
+def dec_test(uuid, c, daddy):
+#def dec_test(*args,**kwargs):
+    print >> sys.stderr, 'in dec_test!'
+    try:
+        print >> sys.stderr, 'in dec_test TRY!'
+        print >> sys.stderr, str(uuid)
+        print >> sys.stderr, str(c)
+        print >> sys.stderr, str(daddy)
+    except:
+        print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
+        print >> sys.stderr, str(sys.exc_info()[1])
+    return "Hmmmmmmm"
+    
 #New inbound call {'Direction': 'inbound', 'From': '16176424223', 'CallerName': '+16176424223', 'BillRate': '0.00900', 'To': '12132601816', 'CallUUID': u'6a551ecc-dd0d-11e1-b24d-efdbf167ae32', 'CallStatus': 'ringing'}
 @app.route("/plivo/voice/answer/", methods=['GET', 'POST'])
 def answer():
     if request.method == 'POST':
         try:
-            print >> sys.stderr, "Received POST request to /answer/."
-            print >> sys.stderr, str(request.form['Direction'])
-            print >> sys.stderr, str(request.form['From'])
-            print >> sys.stderr, str(request.form['BillRate'])
-            print >> sys.stderr, str(request.form['CallerName'])
-            print >> sys.stderr, str(request.form['To'])
-            print >> sys.stderr, str(request.form['CallUUID'])
             #print >> sys.stderr, str(request.form['CallStatus'])
+            
+            #create call object
             c= Call(    timeAnswered = datetime.datetime.now(),
                         direction = request.form['Direction'],
                         callFrom = request.form['From'],
                         billRate = float(request.form['BillRate']),
                         cn = request.form['CallerName'],
                         callTo = request.form['To'],
-                        callUUID = request.form['CallUUID'], 
+                        callUUID = str(request.form['CallUUID']), 
                         #callStatus = request.form['CallStatus'],
-                        callState = 'ringing',) #make a new sCall object
+                        callState = 'ringing',
+                    ) #make a new sCall object
                         
             c.save()
-            s = "Written call object = "+ str(c.callUUID)
-            print >> sys.stderr, s
+            
+            #create state machine
             daddy = CallStateMachDaddy(c.callUUID)
-            print >> sys.stderr, "Made daddy"
-            current_calls[c.callUUID] = daddy
-            print >> sys.stderr, "put daddy into current_calls"
-            
-            s = "call uuid = "+ str(c.callUUID)
-            print >> sys.stderr, s
             daddy.e_answer()
-            print >> sys.stderr, "daddy in answer state"
-            daddy.e_introduce()
-            print >> sys.stderr, "daddy in recording state"
-            r = plivohelper.Response()
-            r.addSpeak("""Please rap your best rap.  You have one minute.  Press star to finish recording.""")
+            if daddy.callXMLBuffer:
+                r = daddy.callXMLBuffer
+                daddy.callXMLBuffer = ''
+          
+            c.callDaddyPickle = pickle.dumps(daddy)
+            c.save()
             
-            #r.addPlay(song_urls[4])
-            auth_id = app.config['AUTH_ID']                        # Our secret keys, please don't put up on github!
-            auth_token = app.config['AUTH_TOKEN'] # Our secret keys, please don't put up on github!
-            p = plivo.RestAPI(auth_id, auth_token)                  # Create a Plivo API object, used when you want to write to their service
-            params = {  'call_uuid':c.callUUID,
-                        'urls':song_urls[4],
-                        'length':60,
-                     }    
-            p.play(params)                                  # A method in RestAPI
             
-            r.addRecord(action=BASEURL+url_for('get_recording'), 
-                        method='POST',
-                        playBeep='true',
-                        maxLength="80",
-                        )
-            r.addSpeak("""No message recorded.""")
-            #r.addGetDigits(numDigits = 6,action = BASEURL+'/plivo/voice/digit_print/')
+                        #send response to Plivo cloud.
             output = "Plivo Call RESTXML Response => %s" % r
             print >> sys.stderr, output
             return render_template('response_template.xml', response=r)
@@ -103,12 +120,8 @@ def answer():
     else:
         print >> sys.stderr, "Received GET request to /answer."
     return "Received GET request to /answer."
-    
 
-
-
-
-@app.route("/plivo/get_recording/", methods=['GET', 'POST'])
+@app.route("/plivo/voice/get_recording/", methods=['GET', 'POST'])
 def get_recording():
         if request.method == 'POST':
             try:
@@ -128,7 +141,7 @@ def get_recording():
 @app.route("/plivo/voice/hangup/", methods=['GET', 'POST'])
 def hang_up():
     if request.method == 'POST':
-        print >> sys.stderr, "Received POST request to /hangup/."
+        print >> sys.stderr, "Received POST request to /hangup/." 
         try:
             thiscall = Call.query.filter(Call.callUUID == request.form['CallUUID']).first()
             s = "call UUID = " + thiscall.callUUID
@@ -147,18 +160,62 @@ def hang_up():
         print >> sys.stderr, "Received GET request to /plivo/voice/hangup."
     return "Received request to /hangup."
 
+@app.route('/plivo/voice/testing_redirect/<uuid>', methods=['GET', 'POST'])
+@get_objects
+def testing_redirect(uuid, c, daddy):
+    if request.method == 'POST':
+        print >> sys.stderr, "Successfully Redirected  to testing_redirect"
+        try:
+            #c = Call.query.filter(Call.callUUID == uuid).first()
+            #daddy =  pickle.loads(c.callDaddyPickle)
+            s = 'type of daddy = '+str(type(daddy))
+            print >> sys.stderr, s
+        except:
+            print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
+            print >> sys.stderr, str(sys.exc_info()[1])
+        print >> sys.stderr, "Retreived daddy from call object"
+        s = 'daddy is '+str(daddy)
+        print >> sys.stderr, s
+        daddy.e_introduce()
+        if daddy.callXMLBuffer:
+            r = daddy.callXMLBuffer
+            daddy.callXMLBuffer = ''
+        return render_template('response_template.xml', response=r)
+        
+    
 @app.route('/calls')
 def list_calls():
-    all_calls = Call.query.all()
-    return render_template('list_calls.html', all_calls = all_calls)
+    try:
+        all_calls = Call.query.descending(Call.timeAnswered).all()
+    except:
+        print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
+        print >> sys.stderr, str(sys.exc_info()[1])
+    return render_template('/calls/list_calls.html', all_calls = all_calls)
+
+@app.route('/calls/<int:page>')
+def paginate_calls(page=1):
+    print >> sys.stderr, "going to calls page"
+    try:
+        pagination = Call.query.descending(Call.timeAnswered).paginate(page=page, per_page=5)
+        print >> sys.stderr, str(type(pagination))
+        return render_template('/calls/paginate_calls.html', pagination = pagination, title = u"Calls")
+    except:
+        print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
+        print >> sys.stderr, str(sys.exc_info()[1])
         
-@app.route('/calls/<uuid>')
+        
+@app.route('/calls/<string:uuid>')
 def detail_calls(uuid):
     print >> sys.stderr, "Received GET request to /calls/detail/."
-    call = Call.query.filter(Call.callUUID == uuid).first()
-    attr_list = get_attributes(call)
-    return render_template('detail_call.html', attr_list = attr_list)
-    
+    try:
+        call = Call.query.filter(Call.callUUID == uuid).first()
+        attr_list = get_attributes(call)
+        return render_template('/calls/detail_call.html', attr_list = attr_list)
+    except:
+        print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
+        print >> sys.stderr, str(sys.exc_info()[1])
+        
+        
 @app.route('/sms')
 def list_sms():
     all_sms = SMS.query.all()
