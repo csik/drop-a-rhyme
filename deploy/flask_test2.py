@@ -196,8 +196,11 @@ def list_calls():
 def paginate_calls(page=1):
     print >> sys.stderr, "going to calls page"
     try:
+        print >> sys.stderr, "about to get pagination"
         pagination = Call.query.descending(Call.timeAnswered).paginate(page=page, per_page=5)
+        print >> sys.stderr, "got pagination, about to print type"
         print >> sys.stderr, str(type(pagination))
+        print >> sys.stderr, "printed type, about to render"
         return render_template('/calls/paginate_calls.html', pagination = pagination, title = u"Calls")
     except:
         print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
