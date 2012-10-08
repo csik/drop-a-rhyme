@@ -21,6 +21,8 @@ from models import Call, SMS, Trax
 from call import CallStateMachDaddy
 
 from functools import wraps
+#import pymongo.objectid
+
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -190,6 +192,7 @@ def list_calls():
     except:
         print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
         print >> sys.stderr, str(sys.exc_info()[1])
+    print >> sys.stderr, "loading /calls page"
     return render_template('/calls/list_calls.html', all_calls = all_calls)
 
 @app.route('/calls/<int:page>')
