@@ -91,6 +91,8 @@ class CallStateMachDaddy(StateMachine):
         self.callXMLBuffer = r #don't forget to purge later!
         
 def play_music(uuid,url,duration):
+    s = "Entering play_music with url: " + str(url) + "   uuid: " + str(uuid) + "   dur: " +str(duration)
+    print >> sys.stderr, s
     p = plivo.RestAPI(auth_id, auth_token)                  # Create a Plivo API object, used when you want to write to their service
     params = {  'call_uuid':uuid,
                 'urls':url,
