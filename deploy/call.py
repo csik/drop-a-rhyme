@@ -97,6 +97,7 @@ def play_music(uuid,url,duration):
     params = {  'call_uuid':uuid,
                 'urls':url,
                 'length':duration,
+                'method':'GET',
              }    
     p.play(params)                                  # A method in RestAPI
     
