@@ -13,7 +13,7 @@ import plivo
 import plivohelper
 from xml.dom import minidom
 
-import pickle
+import cPickle as pickle
 
 from flaskext.mongoalchemy import MongoAlchemy
 
@@ -54,13 +54,17 @@ def get_objects(function):
             c = Call.query.filter(Call.callUUID == uuid).first()
             print >> sys.stderr, 'got c'
             kwargs['c'] = c
-            daddy =  pickle.loads(c.callDaddyPickle)
+            print c
+            daddy =  pickle.loads(str(c.callDaddyPickle))
+	    print "about to daddy"
             kwargs['daddy'] =  daddy
+ 	    print "post daddy"
             print >> sys.stderr, 'kwargs '+str(kwargs)
             #return function(*args, **kwargs)
             return function(uuid=uuid, c=c, daddy=daddy)
         except:
-            print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
+            print "exception in get_objects"
+	    print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
             print >> sys.stderr, str(sys.exc_info()[1])
     return get_objects_wrapper
         
@@ -76,6 +80,7 @@ def dec_test(uuid, c, daddy):
         print >> sys.stderr, str(c)
         print >> sys.stderr, str(daddy)
     except:
+        print "exception in dec_test"
         print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
         print >> sys.stderr, str(sys.exc_info()[1])
     return "Hmmmmmmm"
@@ -83,9 +88,11 @@ def dec_test(uuid, c, daddy):
 #New inbound call {'Direction': 'inbound', 'From': '16176424223', 'CallerName': '+16176424223', 'BillRate': '0.00900', 'To': '12132601816', 'CallUUID': u'6a551ecc-dd0d-11e1-b24d-efdbf167ae32', 'CallStatus': 'ringing'}
 @app.route("/plivo/voice/answer/", methods=['GET', 'POST'])
 def answer():
+    print "entered /answer"
     if request.method == 'POST':
         try:
-            #print >> sys.stderr, str(request.form['CallStatus'])
+            print "request call status:"
+	    print >> sys.stderr, str(request.form['CallStatus'])
             
             #create call object
             c= Call(    timeAnswered = datetime.datetime.now(),
@@ -98,17 +105,23 @@ def answer():
                         #callStatus = request.form['CallStatus'],
                         callState = 'ringing',
                     ) #make a new sCall object
-                        
+            print "about to save"            
             c.save()
             
             #create state machine
             daddy = CallStateMachDaddy(c.callUUID)
+            print "created daddy"
             daddy.e_answer()
+            print "invoked state machine"
             if daddy.callXMLBuffer:
                 r = daddy.callXMLBuffer
                 daddy.callXMLBuffer = ''
-          
+            print "checked callXMLBuffer"
+            print "type c = "+str(type(c))
+            print "type daddy = " +str(type(daddy))
+            
             c.callDaddyPickle = pickle.dumps(daddy)
+            print "stuffed callDaddyPickle"
             c.save()
             
             
@@ -117,6 +130,7 @@ def answer():
             print >> sys.stderr, output
             return render_template('response_template.xml', response=r)
         except:
+            print "exception in /answer"
             print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
             print >> sys.stderr, str(sys.exc_info()[1])
     else:
@@ -134,6 +148,7 @@ def get_recording():
                 print >> sys.stderr, s
                 thiscall.save()
             except:
+                 print "exception in /get_recording"
                  print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
                  print >> sys.stderr, str(sys.exc_info()[1])
         else:
@@ -156,6 +171,7 @@ def hang_up():
             print >> sys.stderr, s
             thiscall.save()
         except:
+             print "exception in /hangup"
              print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
              print >> sys.stderr, str(sys.exc_info()[1])
     else:
@@ -165,6 +181,7 @@ def hang_up():
 @app.route('/plivo/voice/testing_redirect/<uuid>', methods=['GET', 'POST'])
 @get_objects
 def testing_redirect(uuid, c, daddy):
+    print "in redirect..."
     if request.method == 'POST':
         print >> sys.stderr, "Successfully Redirected  to testing_redirect"
         try:
@@ -173,6 +190,7 @@ def testing_redirect(uuid, c, daddy):
             s = 'type of daddy = '+str(type(daddy))
             print >> sys.stderr, s
         except:
+            print "exception in /testing_redirect"
             print >> sys.stderr, str(sys.exc_info()[0]) # These write the nature of the error
             print >> sys.stderr, str(sys.exc_info()[1])
         print >> sys.stderr, "Retreived daddy from call object"
@@ -183,7 +201,9 @@ def testing_redirect(uuid, c, daddy):
             r = daddy.callXMLBuffer
             daddy.callXMLBuffer = ''
         return render_template('response_template.xml', response=r)
-        
+    else:
+        print >> sys.stderr, "Received GET request to /plivo/voice/testing_redirect."
+    return "Received request to /testing_redirect."    
     
 @app.route('/calls')
 def list_calls():

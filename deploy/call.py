@@ -32,8 +32,8 @@ song_urls=['http://50.116.10.109/~csik/plivo_sounds/old_skool.mp3',
 class CallStateMachDaddy(StateMachine):
     def __init__(self,CallUUID):
 		StateMachine.__init__(self)
-		self.call = Call.query.filter(Call.callUUID == CallUUID).first() 
-		self.callXMLBuffer = ''
+		self.callUUID = unicode(CallUUID) 
+		self.callXMLBuffer = u''
     initial_state = 'sm_ringing'
     state('sm_ringing')
     state('sm_answer', enter='_answer_call')
@@ -63,20 +63,21 @@ class CallStateMachDaddy(StateMachine):
 
     def _answer_call(self):
         print >> sys.stderr, "about to _answer_call"
-        s = "Answering call uuid = "+ str(self.call.callUUID)
+        s = "Answering call uuid = "+ str(self.callUUID)
         print >> sys.stderr, s
         r = plivohelper.Response()
         r.addSpeak("Welcome.  Redirecting you to the next state.")
-        r.addRedirect(url = app.config['BASEURL']+'/plivo/voice/testing_redirect/'+str(self.call.callUUID))
+        r.addRedirect(url = app.config['BASEURL']+'/plivo/voice/testing_redirect/'+str(self.callUUID))
         self.callXMLBuffer = r
-        s = "sending xml = "+ str(r)
+        s = "g xml = "+ str(r)
         print >> sys.stderr, s
+ 	print "leaving _answer_call"
         
     def _setup_call(self):
         print >> sys.stderr, "about to _setup_call"
-        s = "setting up call " + str(self.call.callUUID)
+        s = "setting up call " + str(self.callUUID)
         print >> sys.stderr, s
-        play_music(self.call.callUUID,song_urls[4],60)
+        play_music(self.callUUID,song_urls[4],60)
         r = plivohelper.Response()
         r.addSpeak("""Please rap your best rap.  You have one minute.  Press star to finish recording.""")
         r.addRecord(action=app.config['BASEURL']+'/plivo/voice/get_recording/', 
@@ -84,7 +85,7 @@ class CallStateMachDaddy(StateMachine):
                     playBeep='true',
                     maxLength="80",
                     )
-        s = "Ready to record call uuid = "+ str(self.call.callUUID)
+        s = "Ready to record call uuid = "+ str(self.callUUID)
         print >> sys.stderr, s
         s = "returning xml response = "+ str(r)
         print >> sys.stderr, s
